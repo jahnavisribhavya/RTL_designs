@@ -46,15 +46,18 @@ This module covers the background needed before touching any physical design too
 
 Before getting into ASIC-specific tools, it helps to place chip design inside the bigger picture of how any program eventually runs on hardware. Application software and system software both eventually reduce to instructions a compiler and assembler turn into binary — and that binary only means something because a specific piece of hardware was built to understand it.
 
-<img width="1817" height="1078" alt="Screenshot 2026-09-06 121236" src="https://github.com/user-attachments/assets/2a1731e8-68f1-4f06-b809-d4c72ffbe345" />
+<img width="1251" height="737" alt="Screenshot 2026-09-07 001225" src="https://github.com/user-attachments/assets/4ee7d5a7-819d-4627-b2e3-08302d31d1ba" />
+
 
 The same idea applies directly to RISC-V: a C program is cross-compiled and assembled into RISC-V machine code, and that machine code only runs correctly because a specific RTL implementation (like `picorv32`) was built, synthesized, and laid out in silicon to execute exactly that instruction set.
 
-<img width="1782" height="1078" alt="Screenshot 2026-09-06 121104" src="https://github.com/user-attachments/assets/c913b93e-0bce-4574-b643-d12e14b4bc40" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 233223" src="https://github.com/user-attachments/assets/18e759a6-9275-4863-bcc3-693647f70cf5" />
+
 
 Zooming into a single instruction makes the chain explicit: an instruction like `add x6, x10, x6` is defined by the Instruction Set Architecture (the "architecture" of the computer), assembled into binary, and that same binary can be traced forward into a synthesized gate-level netlist and finally a physical layout that implements exactly that operation.
 
-<img width="1917" height="1075" alt="Screenshot 2026-09-06 121313" src="https://github.com/user-attachments/assets/115e9fb5-5cdb-47fa-acde-d3797bbae3a7" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 233330" src="https://github.com/user-attachments/assets/c59c50cb-9282-4c3f-8d08-b9eb038e5f94" />
+
 
 ---
 
@@ -62,7 +65,8 @@ Zooming into a single instruction makes the chain explicit: an instruction like 
 
 An ASIC comes together from three ingredients: **RTL designs** (the logic itself, often sourced from places like librecores.org, opencores.org, or GitHub), **EDA tools** (Qflow, OpenROAD, OpenLANE) that turn that RTL into a manufacturable layout, and **PDK data** describing the target fabrication process.
 
-<img width="1830" height="1017" alt="Screenshot 2026-09-06 121434" src="https://github.com/user-attachments/assets/82987169-5594-47f0-84fd-a8d47743f01f" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 233417" src="https://github.com/user-attachments/assets/6a1645f3-d355-4cd7-958e-599683d4e68c" />
+
 
 ---
 
@@ -70,7 +74,8 @@ An ASIC comes together from three ingredients: **RTL designs** (the logic itself
 
 In the early era of chip design, IC design was tightly coupled to whatever manufacturing process a given company had access to — whoever controlled the physics controlled the creative agenda. Lynn Conway and Carver Mead changed this by pioneering a **structured design methodology** based on λ-based design rules, which separated *design* from *technology* for the first time. That separation is what eventually made **Pure Play Fabs** (companies that only manufacture) and **Fabless design companies** (companies that only design) possible as distinct business models.
 
-<img width="1628" height="970" alt="Screenshot 2026-09-06 121500" src="https://github.com/user-attachments/assets/afe27646-ceea-4ba6-b805-a490ae529bf1" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 233929" src="https://github.com/user-attachments/assets/1cd22d8e-1d25-4c6f-ae42-5e0bc05f83d4" />
+
 
 A **Process Design Kit (PDK)** is the practical result of that separation — a collection of files that models a specific fabrication process for the EDA tools used to design an IC. It typically includes:
 
@@ -86,7 +91,8 @@ A **Process Design Kit (PDK)** is the practical result of that separation — a 
 
 SKY130 is the PDK used throughout this program — a 130nm process, released as a fully open-source, production-grade PDK through a collaboration between **Google** and **SkyWater Technology**.
 
-<img width="808" height="985" alt="Screenshot 2026-09-06 121533" src="https://github.com/user-attachments/assets/fafd5bac-3d4c-4882-8796-34500d111e44" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234007" src="https://github.com/user-attachments/assets/7ab2eee4-a5fa-4625-b4e9-f62286c63cb1" />
+
 
 Its openness is what makes the rest of this program possible without any proprietary licensing — the same PDK data referenced by OpenLANE here is publicly available at `github.com/google/skywater-pdk`.
 
@@ -96,7 +102,8 @@ Its openness is what makes the rest of this program possible without any proprie
 
 Turning RTL into a working chip involves far more individual steps than "synthesis" and "place and route" alone suggest. Some of the stages an EDA toolchain has to cover:
 
-<img width="1917" height="1062" alt="Screenshot 2026-09-06 121614" src="https://github.com/user-attachments/assets/ffc93e63-7f2b-4dab-b433-a68485dd560a" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234113" src="https://github.com/user-attachments/assets/a7f4fc3c-4b96-428c-96b7-aab9d3faf30e" />
+
 
 HDL simulation, HDL design entry, RTL synthesis, logic synthesis, floor planning, power planning, placement (global and detailed), clock tree synthesis, routing (global and detailed), RC extraction, static timing analysis, DRC, LVS, DFM, DFT, IR drop analysis, and static code/logic equivalence checking all have to happen — usually each backed by its own specialized tool.
 
@@ -106,7 +113,8 @@ HDL simulation, HDL design entry, RTL synthesis, logic synthesis, floor planning
 
 At a high level, all of that reduces to one pipeline: RTL and PDK data go in, and a **GDSII** file — the manufacturable layout — comes out, passing through synthesis, floorplanning/power planning, placement, clock tree synthesis, routing, and sign-off along the way.
 
-<img width="1878" height="877" alt="Screenshot 2026-09-06 121630" src="https://github.com/user-attachments/assets/8cc74bc1-bfa4-4e8f-9e46-8e6055472365" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234145" src="https://github.com/user-attachments/assets/17831a65-2d68-4347-b4da-ea2ab3205bb6" />
+
 
 **Synthesis (Synth)**
 
@@ -154,20 +162,23 @@ OpenLANE is an automated, open-source RTL-to-GDSII flow built specifically aroun
 
 Underneath the simplified picture, OpenLANE chains together a specific set of tools for each stage: **Yosys + abc** for RTL synthesis, **OpenSTA** for static timing analysis, **Fault** for DFT, an **OpenROAD** application block handling floorplanning/placement/CTS/optimization/global routing, **TritonRoute** for detailed routing, and **Magic + Netgen** for physical verification and GDSII streaming — with a logic equivalence check (LEC) and a design-exploration loop feeding back into synthesis if results aren't good enough.
 
-<img width="1451" height="782" alt="Screenshot 2026-09-06 122308" src="https://github.com/user-attachments/assets/d09af511-c047-4870-afea-00f51add1256" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234240" src="https://github.com/user-attachments/assets/03bd7160-253c-4838-978b-1a1acb4394f6" />
+
 
 ### 7.2 Design-for-Test (DFT) Integration
 
 Before physical implementation even begins, OpenLANE (via **Fault**) inserts test infrastructure into the design — scan insertion, automatic test pattern generation (ATPG), test pattern compaction, fault coverage, and fault simulation — so that manufactured chips can later be tested for defects.
 
-<img width="1695" height="1006" alt="Screenshot 2026-09-06 122342" src="https://github.com/user-attachments/assets/55e2426c-5be0-4476-a9b4-a691b7dd3117" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234305" src="https://github.com/user-attachments/assets/ad8b0665-bb97-4a53-bcd4-0dcb867b7195" />
+
 
 
 ### 7.3 OpenROAD — Automated Physical Implementation
 
 OpenROAD handles what's often just called automated PnR (Place and Route): floor/power planning, end decoupling capacitor and tap cell insertion, global and detailed placement, post-placement optimization, clock tree synthesis, and global and detailed routing.
 
-<img width="1182" height="957" alt="Screenshot 2026-09-06 122351" src="https://github.com/user-attachments/assets/bdc7a94f-2d8f-4071-9239-6d16b2d54e65" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234327" src="https://github.com/user-attachments/assets/ebec3cb0-eaa2-40df-b1c6-714f1876197b" />
+
 
 
 ### 7.4 Managing Antenna Rule Violations
