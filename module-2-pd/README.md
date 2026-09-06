@@ -47,13 +47,15 @@ This module moves from synthesized gate-level netlists into the **physical desig
 
 ### 1.1 Understanding Core and Die
 
-<img width="796" height="667" alt="Screenshot 2026-09-06 171141" src="https://github.com/user-attachments/assets/80fa165f-c135-497f-add2-fe634ed0d767" />
+<img width="728" height="627" alt="Screenshot 2026-09-06 234638" src="https://github.com/user-attachments/assets/8e537373-361d-4f3b-a9ed-5f09a6581d99" />
+
 
 Every chip is fabricated as one of many identical rectangles stepped across a **silicon wafer**. Each of those rectangles is the **die** — the full physical footprint of the chip, including scribe lines and I/O pads. Inside the die sits the **core** — the region where all logical cells (flip-flops, gates, etc.) are actually placed and routed. The gap between core and die boundary is reserved for I/O pads, ESD structures, and (as covered below) the power distribution network.
 
 ### 1.2 Core Utilization and Aspect Ratio
 
-<img width="1655" height="1078" alt="Screenshot 2026-09-06 171220" src="https://github.com/user-attachments/assets/7b0c13ad-9c03-4548-b7df-c55b25a77268" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234709" src="https://github.com/user-attachments/assets/772a20a6-f30c-4114-a830-974afc12735c" />
+
 
 
 Before anything is placed, floorplanning must fix the width and height of the core and die. Two derived quantities describe how "full" and how "square" that area is:
@@ -63,8 +65,10 @@ Before anything is placed, floorplanning must fix the width and height of the co
 
 ### 1.3 Fixed and Preplaced Cells
 
-<img width="1437" height="1077" alt="Screenshot 2026-09-06 171321" src="https://github.com/user-attachments/assets/f4adf99b-5e49-4bda-b57b-841347a0c914" />
-<img width="1670" height="1065" alt="Screenshot 2026-09-06 171330" src="https://github.com/user-attachments/assets/09e753e4-9e02-4652-8c18-446d6b84130a" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234756" src="https://github.com/user-attachments/assets/c66b4791-97f8-4c4b-88b5-aa343a1e0d41" />
+
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 234836" src="https://github.com/user-attachments/assets/a70eea61-8922-4985-8104-7047623f135e" />
+
 
 
 Not everything in a design is a simple standard cell placed automatically. Larger, pre-designed functional blocks — memories, clock-gating cells, comparators, muxes, or any other hand-crafted/hard IP — are placed at **fixed, known locations** before automatic placement and routing begins. These are called **preplaced cells**, and the process of deciding where these IPs sit within the core is called **floorplanning**. Once their locations are fixed, the automated placement tool places the remaining standard cells around them, treating each preplaced block as a fixed obstacle it must route around.
@@ -73,37 +77,44 @@ Not everything in a design is a simple standard cell placed automatically. Large
 
 **Why decoupling capacitors are needed:** Every gate draws current from the shared Vdd/Vss power grid only when it switches. As you move away from the power supply pad, the metal wire supplying Vdd looks less like an ideal voltage source and more like a resistor-inductor (Rdd, Ldd) network in series with the actual supply. When a gate switches, it demands a short burst of current (**switching/peak current, I_peak**) — and drawing that current through a non-zero Rdd/Ldd causes the local voltage to sag momentarily. This is a **voltage droop / ground bounce** problem: shared rails, many switching cells, and non-ideal wire impedance combine to create transient noise on Vdd and Vss.
 
-<img width="1642" height="328" alt="Screenshot 2026-09-06 171549" src="https://github.com/user-attachments/assets/fcc5b53b-d2c7-424a-be87-863821f5d84c" />
+<img width="1350" height="310" alt="Screenshot 2026-09-06 235440" src="https://github.com/user-attachments/assets/b317ec5d-18c1-4760-b983-dfdae001e9bc" />
 
-<img width="1731" height="1027" alt="Screenshot 2026-09-06 171432" src="https://github.com/user-attachments/assets/2dd64ea1-cac2-43a7-b03a-012c2ea46daf" />
+
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235154" src="https://github.com/user-attachments/assets/6d2ec2d3-7f01-418b-94e1-73a4a45c72c5" />
+
 
 
 If enough gates switch simultaneously, the resulting dip or bump in the supply rail can cross into the **undefined region** between the valid logic-'1' threshold (Vih) and logic-'0' threshold (Vil) — a value neither reliably interpreted as a clean high nor a clean low. This is exactly the kind of noise that can flip a bit or cause a false transition.
 
 **Solution — decoupling capacitors (decaps):** A capacitor is placed in parallel with Vdd/Vss right next to the switching cells it protects. When a cell switches, the decap — already charged to Vdd — supplies the burst of current locally instead of forcing it to travel all the way back through the resistive/inductive supply network. The RC/RL network then has time to replenish the decap's charge before the next switching event, smoothing out the local supply.
 
-<img width="1537" height="1056" alt="Screenshot 2026-09-06 171519" src="https://github.com/user-attachments/assets/2e6d68b1-eb30-42cf-9090-3138bd9f54f5" />
-<img width="1547" height="968" alt="Screenshot 2026-09-06 171458" src="https://github.com/user-attachments/assets/270995c9-cf61-4cc0-bf9e-a2bb4c4b5c8e" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235417" src="https://github.com/user-attachments/assets/a1bd025b-332d-4950-b42d-c993c32452f9" />
+
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235322" src="https://github.com/user-attachments/assets/7fa4906d-4080-4a74-a280-c2b45be1deb6" />
+
 
 
 Physically, decaps (labeled DECAP1, DECAP2, DECAP3 in the floorplan) are placed as their own cells around the preplaced blocks, right alongside the other logic.
 
 **Power planning:** Beyond individual decaps, the whole core needs a robust **power distribution network (PDN)** — a mesh of horizontal and vertical Vdd/Vss straps overlaid across the die so every cell has a short, low-resistance path to the supply, no matter where it sits.
 
-<img width="1781" height="1078" alt="Screenshot 2026-09-06 171608" src="https://github.com/user-attachments/assets/0ac5af3a-67b9-4438-9329-1de49ad1d186" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235506" src="https://github.com/user-attachments/assets/83680fd4-3277-4cf4-b835-b672d076f5ec" />
+
 
 
 This mesh is what the decaps tie into, and it is also why power planning happens early in floorplanning: routing tracks for both signal and power need to be reserved before cell placement gets dense.
 
 ### 1.5 Input and Output Pin Placement
 
-<img width="1856" height="1078" alt="Screenshot 2026-09-06 171658" src="https://github.com/user-attachments/assets/cee1e091-342e-4187-b834-a7e2b9b6da4d" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235617" src="https://github.com/user-attachments/assets/3875e955-c3e3-4024-8d24-67e62d060bcf" />
+
 
 With preplaced blocks and the power mesh fixed, the input/output pins of the design (`Din1..4`, `Dout1..4`, `Clk1`, `Clk2`, `ClkOut`, etc.) are assigned physical locations around the die/core boundary. Pin placement affects how easily signals can later be routed to and from the core logic, so pins are typically placed close to whichever internal block they connect to most directly.
 
 ### 1.6 Placement Blockages
 
-<img width="1588" height="1078" alt="Screenshot 2026-09-06 171718" src="https://github.com/user-attachments/assets/d2ec3d35-547e-4c30-9b2b-d02027e564d4" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235635" src="https://github.com/user-attachments/assets/3c4c5402-e13b-4952-996b-5f114c30e19d" />
+
 
 Finally, a **placement blockage** is marked over the regions already occupied by preplaced cells and the power mesh, telling the automatic placer "don't put any standard cells here." Once pins, preplaced blocks, decaps, and the power mesh are all fixed and blockages are marked, the floorplan is considered ready for the placement and routing step.
 
@@ -117,7 +128,8 @@ Once the floorplan (core/die size, preplaced cells, power mesh, pins) is fixed, 
 
 ### 2.2 Detailed and Optimized Placement
 
-<img width="1317" height="661" alt="Screenshot 2026-09-06 174201" src="https://github.com/user-attachments/assets/93b3a8d5-0108-45d1-b5e7-f861955c8651" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235816" src="https://github.com/user-attachments/assets/b36a3d28-b5c2-4f7b-94ab-4473dd46ea4c" />
+
 
 
 **Detailed placement** then legalizes that rough result: cells are snapped onto actual placement rows and site grid, overlaps are removed, and the tool re-optimizes locally for timing and wirelength based on estimated interconnect delay. This is also where the timing engine starts to matter — the placer needs to know how much delay and capacitance each net will add once wires are drawn, which is exactly what library characterization (next section) provides.
@@ -128,7 +140,8 @@ Once the floorplan (core/die size, preplaced cells, power mesh, pins) is fixed, 
 
 ### 3.1 NLDM, CCS, and Cell Characterization
 
-<img width="1066" height="317" alt="Screenshot 2026-09-06 174419" src="https://github.com/user-attachments/assets/f43ac468-3ff2-4e55-87c8-15a4447d5ab4" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-06 235939" src="https://github.com/user-attachments/assets/3df0c840-ee67-4586-99ef-d2a4c8d66f85" />
+
 
 
 Every timing-driven step in the flow — placement, CTS, routing, static timing analysis — depends on knowing, for every cell in the library, how its delay and output slew change with input slew and output load. Two common modeling styles capture this:
@@ -149,7 +162,8 @@ After placement, every flip-flop's clock pin needs to receive the clock signal a
 
 Everything above treats standard cells (an AND gate, a DFF, a buffer) as fixed, pre-characterized building blocks. This section looks one level deeper: how is a single standard cell itself designed?
 
-<img width="1886" height="1078" alt="Screenshot 2026-09-06 175120" src="https://github.com/user-attachments/assets/dede17c2-577d-4a20-8d2f-0babd450b173" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-07 000141" src="https://github.com/user-attachments/assets/8d9e321f-858f-41b8-8231-dc9cc42b717b" />
+
 
 ### 4.1 Design Inputs and Requirements
 
@@ -159,16 +173,19 @@ A cell designer starts from three kinds of inputs, all supplied by the foundry a
 - **SPICE models** — transistor-level models (like the BSIM parameters shown below) used to simulate the cell's electrical behavior before committing to layout.
 - **A defined cell specification** — the logic function, input/output pin arrangement, and target drive strength the new cell needs to implement.
 
-<img width="1917" height="1078" alt="Screenshot 2026-09-06 175328" src="https://github.com/user-attachments/assets/32551ae9-60a2-4d4b-8923-e80143faf309" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-07 000233" src="https://github.com/user-attachments/assets/15a5587e-b8cd-4469-82a6-b388ed1be2f8" />
+
 
 ### 4.2 Circuit Implementation and Characterization
 
 The designer first builds and simulates the transistor-level circuit (e.g. sizing PMOS/NMOS ratios for a target switching threshold Vm), then, once the circuit works, characterizes it — measuring delay, power, and noise-margin behavior across process/voltage/temperature corners — the same NLDM/CCS characterization discussed above, but here it's the source data being generated rather than consumed.
 
 ### 4.3 Layout Using Euler Paths and Stick Diagrams
-<img width="1877" height="1078" alt="Screenshot 2026-09-06 175642" src="https://github.com/user-attachments/assets/87306482-7b68-4473-9b49-42466ab98d73" />
+<img width="1920" height="1080" alt="Screenshot 2026-09-07 000320" src="https://github.com/user-attachments/assets/eb2520f2-aeb0-4a50-9b7f-dca446fe1cf1" />
 
-<img width="1255" height="671" alt="Screenshot 2026-09-06 180144" src="https://github.com/user-attachments/assets/fc906999-f818-4dfd-9c5e-33060c106893" />
+
+<img width="1920" height="1080" alt="Screenshot 2026-09-07 000411" src="https://github.com/user-attachments/assets/970b39cf-2c8e-4d7a-ab5b-2941ed050f7f" />
+
 
 
 Translating a transistor-level schematic into a compact layout starts with graph theory: the PMOS network and NMOS network of a complex gate (e.g. `(B+D).(A+C)+E.F`) are each represented as a graph, and an **Euler's path** — a path that traverses every edge of the graph exactly once — is found that is *common* to both the PMOS and NMOS graphs. Following that shared Euler's path when placing transistors lets the polysilicon gate strips run in one continuous, non-broken line across the cell, which directly minimizes the diffusion breaks needed and keeps the resulting layout compact. The **stick diagram** is the intermediate abstraction between this graph and the final layout: it shows relative placement and connectivity of poly, diffusion, and metal without yet committing to exact dimensions.
