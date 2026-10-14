@@ -1,0 +1,461 @@
+````
+# 🔬 Module 3 — CMOS Inverter Development, Fabrication, Layout & Testing
+
+<p>
+  <img src="https://img.shields.io/badge/PDK-SKY130A-blue" alt="SKY130A">
+  <img src="https://img.shields.io/badge/Simulator-ngspice-orange" alt="ngspice">
+  <img src="https://img.shields.io/badge/Layout-Magic_VLSI-green" alt="Magic VLSI">
+  <img src="https://img.shields.io/badge/Format-SPICE-red" alt="SPICE">
+  <img src="https://img.shields.io/badge/Verification-DRC-yellow" alt="DRC">
+  <img src="https://img.shields.io/badge/VCS-Git%20%26%20GitHub-black" alt="Git & GitHub">
+  <img src="https://img.shields.io/badge/OS-Linux-lightgrey" alt="Linux">
+</p>
+
+> Part of the SKY130 VLSI Physical Design module series.
+
+## 📖 Module Overview
+
+This document covers Module 3 of the SKY130 VLSI design flow: designing, simulating, laying out, extracting, and characterizing a CMOS inverter standard cell. It follows the complete path from a transistor-level SPICE circuit through the Voltage Transfer Characteristic (VTC) and switching-threshold analysis, into the 16-mask CMOS fabrication process, a Magic-based standard-cell layout, Design Rule Checking (DRC), SPICE extraction, and final post-layout characterization using ngspice.
+
+|  |  |
+|---|---|
+| 🛠️ **Tools used** | ngspice, Magic VLSI, SKY130A PDK, SPICE/NGSPICE, Git & GitHub, Linux terminal |
+| 🧩 **Example design(s)** | CMOS inverter standard cell (`vsdstdcelldesign`) |
+| 📋 **Prerequisites** | SKY130 PDK installed, Magic and ngspice set up, basic MOSFET/CMOS theory, Git installed |
+
+## 📑 Contents
+
+1. CMOS Inverter Circuit Design and SPICE Simulation
+   1.1 SPICE Deck Creation
+   1.2 DC and Transient Simulation
+2. Voltage Transfer Characteristic and Switching Threshold
+   2.1 VTC Generation
+   2.2 Switching Threshold Vm
+   2.3 Transistor Sizing and Its Effect on Vm
+3. Static and Dynamic Analysis of the Inverter
+4. CMOS Fabrication Process (16-Mask Flow)
+   4.1 Active Region Formation (LOCOS)
+   4.2 N-Well and P-Well Formation
+   4.3 Threshold Voltage and Body Effect
+   4.4 Gate Formation
+   4.5 LDD Formation and Side-Wall Spacers
+   4.6 Source and Drain Formation
+   4.7 Contacts and Local Interconnect
+   4.8 Higher-Level Metal Formation and Complete Structure
+5. Standard Cell Layout Design in Magic
+   5.1 Cloning the Design Repository
+   5.2 Loading SKY130 Technology Files
+   5.3 Cell Boundary, Power and Ground Connectivity
+   5.4 CMOS Inverter Layout and Abstract View
+6. Design Rule Checking (DRC)
+   6.1 DRC Concepts and Common Rules
+   6.2 Fixing the poly.9 DRC Error
+   6.3 Poly Resistor Spacing to Diffusion and Tap
+   6.4 Debugging DRC Errors as Geometrical Constructs
+7. SPICE Extraction from the Layout
+   7.1 Extraction Flow
+   7.2 Extracted Netlist and SPICE File Generation
+8. Post-Layout Characterization Using ngspice
+   8.1 Transient Simulation of the Extracted Netlist
+   8.2 Input/Output Waveforms
+   8.3 Timing and Parasitic Effects
+9. Overall Module 3 Flow
+10. Tools and Technologies Used
+- Author
+
+---
+
+## 1️⃣ CMOS Inverter Design and SPICE-Based Simulation
+
+A CMOS inverter consists of a PMOS transistor (connected to VDD) and an NMOS transistor (connected to GND/VSS), with their gates tied together to form the input and their drains tied together to form the output.
+
+```text
+             VDD
+              |
+             PMOS
+              |
+Vin ----------|------ Vout
+              |
+             NMOS
+              |
+             GND
+```
+
+### 1.1 Preparing the SPICE Deck
+
+The SPICE deck contains transistor definitions, SKY130A device models, circuit connections, the power supply, an input stimulus, simulation commands, and measurement statements. The initial transistor dimensions used were:
+
+$$W_n = W_p = 0.375\mu m, \quad L_n = L_p = 0.25\mu m$$
+
+giving $W_n/L_n = W_p/L_p = 1.5$.
+
+<img width="1122" height="530" alt="Screenshot 2026-09-26 072640" src="https://github.com/user-attachments/assets/f12f9d9d-e9ec-4916-971c-ec1700825484" />
+
+### 1.2 DC and Transient Response Simulation
+
+The circuit was simulated in ngspice to observe input voltage, output voltage, current, and switching behavior. The inverter operates through complementary switching:
+
+- When **Vin is LOW** → PMOS is ON, NMOS is OFF → **Vout is HIGH**
+- When **Vin is HIGH** → NMOS is ON, PMOS is OFF → **Vout is LOW**
+- During the transition region, both transistors influence the output.
+
+<img width="1167" height="532" alt="Screenshot 2026-09-26 072802" src="https://github.com/user-attachments/assets/c44587ee-ab57-424c-97e9-434f852cdf11" />
+
+---
+
+## 2️⃣ Voltage Transfer Curve and Switching Threshold
+
+### 2.1 Generating the VTC
+
+The VTC represents $V_{out} = f(V_{in})$ and can be divided into three regions: HIGH output, transition, and LOW output. During the HIGH region $V_{out} \approx V_{DD}$, and during the LOW region $V_{out} \approx 0$. The steep transition region indicates high voltage gain around the switching point.
+
+<img width="981" height="842" alt="Screenshot 2026-09-26 072906" src="https://github.com/user-attachments/assets/981c23fd-a26b-4ef6-b05f-013340df5750" />
+
+### 2.2 Inverter Switching Threshold Vm
+
+The switching threshold **Vm** is the input voltage at which $V_{in} = V_{out}$, i.e. where the inverter transitions between logic states. Key VTC parameters are:
+
+| Parameter | Meaning |
+|---|---|
+| VOH | Output High Voltage |
+| VOL | Output Low Voltage |
+| VIH | Input High Voltage |
+| VIL | Input Low Voltage |
+| Vm | Switching Threshold |
+
+Observed values across different sizing configurations were approximately **Vm ≈ 0.98 V** and **Vm ≈ 1.2 V**.
+
+<img width="856" height="438" alt="Screenshot 2026-09-26 073002" src="https://github.com/user-attachments/assets/cc8b24e9-0356-49b9-bb85-1d293174dc76" />
+
+Vm can also be derived analytically from the relative drive strengths of the NMOS/PMOS devices, considering $W_n/L_n$, $W_p/L_p$, $K_n$, $K_p$, saturation voltage, and device threshold parameters.
+
+<img width="993" height="470" alt="Screenshot 2026-09-26 073107" src="https://github.com/user-attachments/assets/bc7050a8-4857-41f0-85f0-328e7c43260e" />
+
+
+### 2.3 Impact of Transistor Sizing on Vm
+
+Two configurations were compared:
+
+| Config | $W_n/L_n$ | $W_p/L_p$ | $W_p$ |
+|---|---|---|---|
+| 1 | 1.5 | 1.5 | 0.375 µm |
+| 2 | 1.5 | 3.75 | 0.9375 µm |
+
+Increasing PMOS width increases its relative drive strength, shifting the switching threshold and changing the timing characteristics.
+
+<img width="877" height="467" alt="Screenshot 2026-09-26 073120" src="https://github.com/user-attachments/assets/ea8a0ec7-af6b-437e-b9a6-4b9aa9f81611" />
+
+<img width="866" height="463" alt="Screenshot 2026-09-26 073132" src="https://github.com/user-attachments/assets/cff07c5b-2788-47bd-829c-6e4de564ce82" />
+
+---
+
+## 3️⃣ Static and Dynamic Evaluation of the Inverter
+
+**Static analysis** studies DC characteristics: VOH, VOL, VIH, VIL, Vm, noise margins, and the DC transfer curve (VTC).
+
+**Dynamic analysis** studies time-dependent behavior: propagation delay, rise time, fall time, charging/discharging behavior, and dynamic power consumption — important because standard cells must meet timing at the target operating frequency.
+
+---
+
+## 4️⃣ CMOS Manufacturing Process (16-Mask Flow)
+
+The physical implementation of a standard cell is built through a sequence of fabrication steps that define what each layout layer physically represents.
+
+### 4.1 Defining the Active Region (LOCOS)
+
+The active region defines where transistor source/drain regions are formed — NMOS in the P-type region, PMOS inside the N-well. The process used is **LOCOS (Local Oxidation of Silicon)**, involving a P-type substrate, silicon nitride masking, photoresist, field oxide, and the resulting bird's-beak effect, used to isolate active regions from surrounding silicon.
+
+<img width="897" height="451" alt="Screenshot 2026-09-26 073145" src="https://github.com/user-attachments/assets/52983bbf-86aa-46ea-89f5-6994c33e278d" />
+
+### 4.2 Creating the N-Well and P-Well
+
+Ion implantation creates the N-well (where PMOS is formed) and P-well (where NMOS is formed), establishing the correct body environment, isolation, and substrate biasing for CMOS operation.
+
+<img width="952" height="436" alt="Screenshot 2026-09-26 073156" src="https://github.com/user-attachments/assets/25bec299-7b60-4d0b-9db4-2a2234b0d286" />
+
+### 4.3 Threshold Voltage and the Body Effect
+
+MOS threshold voltage depends on:
+
+- $V_{T0}$ — threshold voltage at zero body bias
+- $\gamma$ — body-effect coefficient
+- $V_{SB}$ — source-to-body voltage
+- $\Phi_F$ — Fermi potential
+- $N_A$ — doping concentration
+- $C_{ox}$ — oxide capacitance
+
+<img width="980" height="461" alt="Screenshot 2026-09-26 073205" src="https://github.com/user-attachments/assets/f8c2ec22-85ea-40cb-a854-33c2d40a5cae" />
+
+### 4.4 Gate Layer Formation
+
+Polysilicon deposited over the active region forms the gate; the poly/active intersection forms the channel. In a CMOS inverter, the PMOS and NMOS gates are tied together to form the input, and the drains are tied together to form the output.
+
+<img width="890" height="445" alt="Screenshot 2026-09-26 073214" src="https://github.com/user-attachments/assets/89f69fe6-423d-489d-9b08-c60f4edcb58c" />
+
+<img width="842" height="450" alt="Screenshot 2026-09-26 073558" src="https://github.com/user-attachments/assets/048d71fe-b49f-4526-aadc-89595b62d00a" />
+
+### 4.5 LDD Regions and Side-Wall Spacer Formation
+
+Lightly Doped Drain (LDD) regions near the source/drain reduce the electric field at the drain, improving reliability and hot-carrier performance. Phosphorus implantation is used to set the required doping profile, followed by side-wall spacer formation, which sets the separation between the gate and the later heavily-doped source/drain regions.
+
+<img width="786" height="447" alt="Screenshot 2026-09-26 073611" src="https://github.com/user-attachments/assets/4f51d807-8cee-432d-99ee-e6ba352bc88a" />
+
+<img width="897" height="447" alt="Screenshot 2026-09-26 073619" src="https://github.com/user-attachments/assets/16b7cbc3-e4ff-46f7-9b93-fe9616ef82cd" />
+
+<img width="778" height="447" alt="Screenshot 2026-09-26 073632" src="https://github.com/user-attachments/assets/e25d18c2-dca9-4657-a090-6aa26f756777" />
+
+
+### 4.6 Forming the Source and Drain
+
+Final source/drain regions are formed by high-temperature doping — N-type for NMOS, P-type for PMOS — completing the basic transistor structure:
+
+```text
+        Gate
+         │
+    ┌────┴────┐
+    │ Channel │
+────┴─────────┴────
+ Source       Drain
+```
+
+<img width="936" height="467" alt="Screenshot 2026-09-26 073644" src="https://github.com/user-attachments/assets/213dded3-a0af-459f-8f52-0ad12b97d7a8" />
+
+### 4.7 Contact Formation and Local Interconnect
+
+Titanium is sputtered onto the wafer to prepare low-resistance connections, followed by contact formation linking source, drain, and gate to the local interconnect layer — turning isolated transistors into electrically accessible devices.
+
+<img width="777" height="443" alt="Screenshot 2026-09-26 073653" src="https://github.com/user-attachments/assets/98a09a5c-e270-4d5d-a287-d4f45d3f1028" />
+
+<img width="811" height="445" alt="Screenshot 2026-09-26 073703" src="https://github.com/user-attachments/assets/5a9b2fb3-7baf-4b4a-9368-1cebc5d78a19" />
+
+### 4.8 Upper Metal Layers and the Completed Structure
+
+Higher-level metal layers route signals, VDD, and VSS across the chip and connect individual cells into a complete circuit network.
+
+<img width="848" height="451" alt="Screenshot 2026-09-26 073714" src="https://github.com/user-attachments/assets/e5ac4cdf-b0b2-4fcc-82d1-805e7ce9b785" />
+
+
+<img width="635" height="433" alt="Screenshot 2026-09-26 073724" src="https://github.com/user-attachments/assets/b04a3796-a970-4c11-991b-65ab2009116f" />
+
+---
+
+## 5️⃣ Designing the Standard Cell Layout in Magic
+
+### 5.1 Cloning the Project Repository
+
+```bash
+git clone <repository-url>
+cd <repository-directory>
+```
+
+The cloned `vsdstdcelldesign` repository provides the starting environment for the layout and characterization flow.
+
+### 5.2 Importing SKY130 Technology Files
+
+Magic requires the SKY130A technology file (`sky130A.tech`) to correctly interpret layer names, connectivity, design rules, and DRC/extraction rules.
+
+<img width="1600" height="950" alt="WhatsApp Image 2026-09-25 at 7 51 31 PM (1)" src="https://github.com/user-attachments/assets/845d0ed6-ca4c-4630-adc5-839ac943e7f0" />
+
+<img width="1600" height="1003" alt="WhatsApp Image 2026-09-25 at 7 51 31 PM" src="https://github.com/user-attachments/assets/d8c1f33e-b167-4fd0-bcd3-441660a44b42" />
+
+### 5.3 Cell Boundaries and Power/Ground Connections
+
+A cell boundary defines the exact width/height occupied by the cell, ensuring consistent dimensions, accurate placement, alignment with neighboring cells, and correct VDD/GND rail locations for library compatibility.
+
+VDD and GND rails are then connected: the PMOS network toward VDD and the NMOS network toward GND, matching the pull-up/pull-down structure of the inverter.
+
+### 5.4 Inverter Layout and Its Abstract View
+
+The completed layout contains the PMOS/NMOS transistors, input/output pins, VDD/VSS connections, well/tap structures, and metal routing, built using SKY130 layers (active/diffusion, poly, contact, metal1/2, N-well, implant, and tap layers).
+
+<img width="1600" height="949" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (15)" src="https://github.com/user-attachments/assets/8aacbd4a-50e4-4fd3-bddc-2eeed4cd1412" />
+
+
+An **abstract view** (LEF — Library Exchange Format) provides a simplified physical representation containing cell dimensions, pin locations/names, routing layers, obstructions, and placement information, without full transistor geometry.
+
+
+---
+
+## 6️⃣ Checking Design Rules (DRC)
+
+### 6.1 DRC Basics and Typical Rules
+
+DRC verifies that a layout satisfies the physical design rules of the technology before it can be considered valid. Common rule types include:
+
+- Minimum width
+- Minimum spacing
+- Minimum enclosure
+- Minimum overlap
+- Minimum extension
+- Layer-specific spacing requirements
+
+<img width="693" height="865" alt="Screenshot 2026-09-26 081726" src="https://github.com/user-attachments/assets/9cb0cc71-c60c-462f-b3ca-072edb586d3d" />
+
+### 6.2 Resolving the poly.9 DRC Violation
+
+Debugging flow used for the `poly.9` violation:
+
+1. Identify the reported DRC location.
+2. Inspect the affected geometry in Magic.
+3. Understand the rule associated with the error.
+4. Determine the required geometrical relationship.
+5. Modify the layout or the relevant technology rule.
+6. Re-run DRC and verify the error is resolved.
+
+### 6.3 Spacing Between Poly Resistors, Diffusion, and Taps
+
+This exercise checks the minimum spacing between polysilicon resistor structures, diffusion regions, and tap regions — incorrect spacing here produces DRC violations, so the layout must meet SKY130's minimum spacing rules.
+
+### 6.4 Understanding DRC Errors as Geometric Violations
+
+Rather than treating a DRC error as just a message, it should be analyzed as a geometrical violation by identifying: the affected layers, their geometrical relationship, the required rule condition, the actual layout condition, and the needed correction.
+
+<img width="1600" height="947" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (8)" src="https://github.com/user-attachments/assets/71ded9d7-0289-4ac5-b453-bec84074ca8c" />
+
+---
+
+## 7️⃣ Extracting SPICE Data from the Layout
+
+### 7.1 Layout Extraction Workflow
+
+```text
+Circuit Design
+      ↓
+Physical Layout
+      ↓
+DRC Verification
+      ↓
+SPICE Extraction
+      ↓
+Extracted SPICE Netlist
+      ↓
+Simulation
+```
+
+Extraction identifies the transistors, connections, nodes, device parameters, and parasitic components implied by the physical geometry, converting it into an electrical (SPICE-compatible) representation.
+
+<img width="882" height="855" alt="Screenshot 2026-09-26 081917" src="https://github.com/user-attachments/assets/07db20c5-d8a9-4b3f-828f-8fece6df6223" />
+
+### 7.2 Creating the Extracted Netlist and SPICE Files
+
+The extracted `.ext`/SPICE files are generated and inspected, then combined with SKY130 model files and a standard-cell subcircuit definition (input/output nodes, VDD, GND) into a simulation-ready SPICE deck.
+
+<img width="1600" height="953" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (13)" src="https://github.com/user-attachments/assets/fb092721-f8ac-422e-a1e4-84210e0b3bd1" />
+
+<img width="1600" height="947" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (12)" src="https://github.com/user-attachments/assets/1530d294-cf8e-4a01-93b5-bd30e57ee0a5" />
+
+---
+
+## 8️⃣ Post-Layout Evaluation with ngspice
+
+### 8.1 Transient Analysis of the Extracted Netlist
+
+The extracted netlist is simulated in ngspice with a time-varying input while monitoring Input, Output, VDD, and GND to verify correct connectivity and switching behavior.
+
+<img width="1600" height="951" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (11)" src="https://github.com/user-attachments/assets/f5e4238c-9524-49ca-9e1c-4c97488902e9" />
+
+<img width="1600" height="945" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (10)" src="https://github.com/user-attachments/assets/a67648d4-360e-4dd8-b082-ad9ffc9f0278" />
+
+
+### 8.2 Input and Output Waveforms
+
+| Input | Output |
+|---|---|
+| LOW | HIGH |
+| HIGH | LOW |
+
+The fundamental relationship confirmed is **Output = NOT(Input)**, with the output approaching the expected VDD/GND levels.
+
+<img width="1600" height="949" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (9)" src="https://github.com/user-attachments/assets/07966352-3fef-4048-8e26-8238a008cb9b" />
+
+### 8.3 Timing Behavior and Parasitic Effects
+
+Extracted parasitic elements (from real layout geometry) can influence propagation delay, rise time, fall time, and output transition speed — making post-layout simulation more realistic than an ideal schematic-level simulation. Key timing parameters tracked: rise time, fall time, propagation delay, and input/output transition time.
+
+---
+
+## 9️⃣ Complete Module 3 Workflow
+
+```text
+                    SKY130 MODULE 3
+                           |
+                           ↓
+              CMOS Inverter Design
+                           |
+                           ↓
+                 SPICE Deck Creation
+                           |
+                           ↓
+                  ngspice Simulation
+                           |
+                           ↓
+                Switching Threshold Vm
+                           |
+                           ↓
+             Static & Dynamic Analysis
+                           |
+                           ↓
+                 Sky130 PDK Models
+                           |
+                           ↓
+              CMOS Fabrication Process
+                           |
+                           ↓
+                 Magic Layout Design
+                           |
+                           ↓
+              Standard Cell Layout
+                           |
+                           ↓
+                 DRC Verification
+                           |
+                           ↓
+              SPICE Netlist Extraction
+                           |
+                           ↓
+               Inverter Characterization
+                           |
+                           ↓
+                    LEF Generation
+                           |
+                           ↓
+              Standard Cell Library
+```
+
+---
+
+## 🔟 Tools and Technologies Applied
+
+| Tool / Technology | Purpose |
+|---|---|
+| ngspice / NGSPICE | CMOS circuit simulation and characterization |
+| Magic VLSI | Layout creation, editing, DRC, and SPICE extraction |
+| SKY130A PDK | Technology rules, device models, and design information |
+| SPICE | Circuit-level simulation |
+| Git & GitHub | Version control, repository management, documentation |
+| LEF | Abstract physical representation of standard cells |
+| DRC | Physical design-rule verification |
+| SKY130 Model Files | Device-level simulation and characterization |
+| Standard Cell Library | Reusable digital logic cells |
+
+---
+
+## ✅ Takeaways
+
+- ✅ Understood the working principle of a CMOS inverter through complementary PMOS/NMOS switching.
+- ✅ Built and simulated a transistor-level CMOS inverter using SPICE and ngspice.
+- ✅ Generated the VTC and identified the switching threshold Vm both from simulation and analytically.
+- ✅ Studied how transistor sizing ($W/L$ ratios) affects Vm, drive strength, and timing.
+- ✅ Learned the 16-mask CMOS fabrication sequence — from LOCOS active-region formation through wells, gate, LDD, source/drain, contacts, and metallization.
+- ✅ Created a CMOS inverter standard-cell layout in Magic using SKY130A technology files, including cell boundary and power/ground connectivity.
+- ✅ Ran DRC, interpreted violations (including the `poly.9` error) as geometrical constructs, and resolved them.
+- ✅ Extracted a SPICE netlist directly from the physical layout and generated an LEF abstract view.
+- ✅ Performed post-layout ngspice transient simulation, verifying `Output = NOT(Input)` and studying parasitic/timing effects.
+- ✅ Connected the full flow: **Simulation → Fabrication Understanding → Layout → DRC → Extraction → Characterization → Standard Cell Library**, forming a foundation for RTL-to-GDSII physical design.
+
+## 👤 About the Author
+
+**Jahnavi**
+B.Tech, Electronics and Communication Engineering
+Anurag University, Hyderabad
+````
