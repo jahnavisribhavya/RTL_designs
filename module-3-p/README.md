@@ -297,7 +297,8 @@ VDD and GND rails are then connected: the PMOS network toward VDD and the NMOS n
 
 The completed layout contains the PMOS/NMOS transistors, input/output pins, VDD/VSS connections, well/tap structures, and metal routing, built using SKY130 layers (active/diffusion, poly, contact, metal1/2, N-well, implant, and tap layers).
 
-<img width="1600" height="949" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (15)" src="https://github.com/user-attachments/assets/8aacbd4a-50e4-4fd3-bddc-2eeed4cd1412" />
+
+<img width="1240" height="690" alt="Screenshot 2026-10-14 230210" src="https://github.com/user-attachments/assets/ad758f18-f8d5-485a-b179-291fee2359cd" />
 
 
 An **abstract view** (LEF — Library Exchange Format) provides a simplified physical representation containing cell dimensions, pin locations/names, routing layers, obstructions, and placement information, without full transistor geometry.
@@ -318,7 +319,9 @@ DRC verifies that a layout satisfies the physical design rules of the technology
 - Minimum extension
 - Layer-specific spacing requirements
 
-<img width="693" height="865" alt="Screenshot 2026-09-26 081726" src="https://github.com/user-attachments/assets/9cb0cc71-c60c-462f-b3ca-072edb586d3d" />
+
+<img width="815" height="770" alt="Screenshot 2026-10-14 230400" src="https://github.com/user-attachments/assets/b7e6e819-0c72-41a7-a8ca-1c2bde19e022" />
+
 
 ### 6.2 Fixing the poly.9 DRC Error
 
@@ -339,7 +342,9 @@ This exercise checks the minimum spacing between polysilicon resistor structures
 
 Rather than treating a DRC error as just a message, it should be analyzed as a geometrical violation by identifying: the affected layers, their geometrical relationship, the required rule condition, the actual layout condition, and the needed correction.
 
-<img width="1600" height="947" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (8)" src="https://github.com/user-attachments/assets/71ded9d7-0289-4ac5-b453-bec84074ca8c" />
+
+<img width="817" height="471" alt="Screenshot 2026-10-14 230412" src="https://github.com/user-attachments/assets/ac9d6ecc-4671-4712-b3b3-b15a738f8436" />
+
 
 ---
 
@@ -363,15 +368,21 @@ Simulation
 
 Extraction identifies the transistors, connections, nodes, device parameters, and parasitic components implied by the physical geometry, converting it into an electrical (SPICE-compatible) representation.
 
-<img width="882" height="855" alt="Screenshot 2026-09-26 081917" src="https://github.com/user-attachments/assets/07db20c5-d8a9-4b3f-828f-8fece6df6223" />
+
+<img width="802" height="747" alt="Screenshot 2026-10-14 230436" src="https://github.com/user-attachments/assets/d568fa5e-5f53-46c6-bd63-5ee1ac967f82" />
+
 
 ### 7.2 Extracted Netlist and SPICE File Generation
 
 The extracted `.ext`/SPICE files are generated and inspected, then combined with SKY130 model files and a standard-cell subcircuit definition (input/output nodes, VDD, GND) into a simulation-ready SPICE deck.
 
-<img width="1600" height="953" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (13)" src="https://github.com/user-attachments/assets/fb092721-f8ac-422e-a1e4-84210e0b3bd1" />
 
-<img width="1600" height="947" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (12)" src="https://github.com/user-attachments/assets/1530d294-cf8e-4a01-93b5-bd30e57ee0a5" />
+<img width="816" height="450" alt="Screenshot 2026-10-14 230446" src="https://github.com/user-attachments/assets/409d7719-322b-4a36-831b-81cf8c0657b6" />
+
+
+
+<img width="810" height="436" alt="Screenshot 2026-10-14 230458" src="https://github.com/user-attachments/assets/1121779d-64d3-421f-b288-d214a6ed3206" />
+
 
 ---
 
@@ -381,9 +392,13 @@ The extracted `.ext`/SPICE files are generated and inspected, then combined with
 
 The extracted netlist is simulated in ngspice with a time-varying input while monitoring Input, Output, VDD, and GND to verify correct connectivity and switching behavior.
 
-<img width="1600" height="951" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (11)" src="https://github.com/user-attachments/assets/f5e4238c-9524-49ca-9e1c-4c97488902e9" />
 
-<img width="1600" height="945" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (10)" src="https://github.com/user-attachments/assets/a67648d4-360e-4dd8-b082-ad9ffc9f0278" />
+<img width="821" height="452" alt="Screenshot 2026-10-14 230508" src="https://github.com/user-attachments/assets/a788bd3d-450e-426a-aeea-926414e69335" />
+
+
+
+<img width="823" height="450" alt="Screenshot 2026-10-14 230520" src="https://github.com/user-attachments/assets/6325f45d-19b6-4181-8939-58c7c05360b2" />
+
 
 
 ### 8.2 Input/Output Waveforms
@@ -395,7 +410,9 @@ The extracted netlist is simulated in ngspice with a time-varying input while mo
 
 The fundamental relationship confirmed is **Output = NOT(Input)**, with the output approaching the expected VDD/GND levels.
 
-<img width="1600" height="949" alt="WhatsApp Image 2026-09-25 at 7 51 30 PM (9)" src="https://github.com/user-attachments/assets/07966352-3fef-4048-8e26-8238a008cb9b" />
+
+<img width="815" height="457" alt="Screenshot 2026-10-14 230533" src="https://github.com/user-attachments/assets/eccc02f1-3651-416f-8bc8-0fe3a29abc7f" />
+
 
 ### 8.3 Timing and Parasitic Effects
 
@@ -484,6 +501,6 @@ Extracted parasitic elements (from real layout geometry) can influence propagati
 
 ## 👤 Author
 
-**Arpitha**
+**Jahnavi Sri Bhavya**
 B.Tech, Electronics and Communication Engineering
 Anurag University, Hyderabad
